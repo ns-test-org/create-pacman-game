@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 
 const GRID_SIZE = 20;
-const CELL_SIZE = 20;
+const CELL_SIZE = 30;
 const INITIAL_PACMAN = { x: 10, y: 10 };
 const INITIAL_GHOSTS = [
   { x: 5, y: 5, color: 'red' },
@@ -179,10 +179,11 @@ export default function PacmanGame() {
       </div>
       
       <div 
-        className="relative bg-gray-900 border-4 border-blue-500"
+        className="relative bg-gray-900 border-4 border-blue-500 shadow-2xl"
         style={{ 
           width: GRID_SIZE * CELL_SIZE, 
-          height: GRID_SIZE * CELL_SIZE 
+          height: GRID_SIZE * CELL_SIZE,
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(0, 0, 0, 0.3)'
         }}
       >
         {/* Pellets */}
@@ -254,6 +255,8 @@ export default function PacmanGame() {
     </div>
   );
 }
+
+
 
 
 
