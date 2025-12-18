@@ -1,84 +1,257 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
-const slogans = [
-  "Turn chats into apps",
-  "Prompt. Ship. Repeat.",
-  "Build anything from a chat",
-  "Ideas → Apps, instantly",
-  "From zero to MVP in minutes",
-  "Your cofounder in the command line",
-  "Draft, iterate, deploy",
-  "Ship faster than you can type",
-  "Design in text, deliver in code",
-  "Dream it. Prompt it. Run it.",
-  "Chat-native app building",
-  "From prompt to product",
-  "One prompt, infinite apps",
-  "Stop scaffolding. Start shipping.",
-  "Prototype at the speed of thought",
-  "Make conversations executable"
+const GRID_SIZE = 20;
+const CELL_SIZE = 20;
+const INITIAL_PACMAN = { x: 10, y: 10 };
+const INITIAL_GHOSTS = [
+  { x: 5, y: 5, color: 'red' },
+  { x: 15, y: 5, color: 'pink' },
+  { x: 5, y: 15, color: 'cyan' },
+  { x: 15, y: 15, color: 'orange' }
 ];
 
-export default function Landing() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isVisible, setIsVisible] = useState(true);
+type Direction = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT';
 
+export default function PacmanGame() {
+  const [pacman, setPacman] = useState(INITIAL_PACMAN);
+  const [direction, setDirection] = useState<Direction>('RIGHT');
+  const [ghosts, setGhosts] = useState(INITIAL_GHOSTS);
+  const [pellets, setPellets] = useState<Set<string>>(new Set());
+  const [score, setScore] = useState(0);
+  const [gameOver, setGameOver] = useState(false);
+  const [gameWon, setGameWon] = useState(false);
+
+  // Initialize pellets
   useEffect(() => {
-    const interval = setInterval(() => {
-      setIsVisible(false);
-      setTimeout(() => {
-        setCurrentIndex((prev) => (prev + 1) % slogans.length);
-        setIsVisible(true);
-      }, 400);
-    }, 2800);
-
-    return () => clearInterval(interval);
+    const initialPellets = new Set<string>();
+    for (let x = 0; x < GRID_SIZE; x++) {
+      for (let y = 0; y < GRID_SIZE; y++) {
+        if (x !== INITIAL_PACMAN.x || y !== INITIAL_PACMAN.y) {
+          initialPellets.add(`${x},${y}`);
+        }
+      }
+    }
+    setPellets(initialPellets);
   }, []);
 
-  return (
-    <div className="relative h-[100dvh] w-full overflow-hidden bg-black text-white">
-      {/* Enhanced animated aurora background layers */}
-      <div className="absolute inset-0 bg-aurora-layer-1" />
-      <div className="absolute inset-0 bg-aurora-layer-2" />
-      <div className="absolute inset-0 bg-aurora-layer-3" />
+  // Handle keyboard input
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (gameOver || gameWon) return;
       
-      {/* Floating particles overlay */}
-      <div className="absolute inset-0 bg-particles" />
-      
-      {/* Main content - centered */}
-      <main className="relative z-10 h-full flex flex-col items-center justify-center px-6">
-        <h1 className="text-center text-[clamp(28px,6vw,64px)] font-medium tracking-tight mb-4">
-          Turn Chats into Apps
-        </h1>
+      switch (e.key) {
+        case 'ArrowUp':
+        case 'w':
+          setDirection('UP');
+          break;
+        case 'ArrowDown':
+        case 's':
+          setDirection('DOWN');
+          break;
+        case 'ArrowLeft':
+        case 'a':
+          setDirection('LEFT');
+          break;
+        case 'ArrowRight':
+        case 'd':
+          setDirection('RIGHT');
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [gameOver, gameWon]);
+
+  // Move Pac-Man
+  useEffect(() => {
+    if (gameOver || gameWon) return;
+
+    const interval = setInterval(() => {
+      setPacman(prev => {
+        let newX = prev.x;
+        let newY = prev.y;
+
+        switch (direction) {
+          case 'UP':
+            newY = Math.max(0, prev.y - 1);
+            break;
+          case 'DOWN':
+            newY = Math.min(GRID_SIZE - 1, prev.y + 1);
+            break;
+          case 'LEFT':
+            newX = Math.max(0, prev.x - 1);
+            break;
+          case 'RIGHT':
+            newX = Math.min(GRID_SIZE - 1, prev.x + 1);
+            break;
+        }
+
+        // Check pellet collision
+        const key = `${newX},${newY}`;
+        if (pellets.has(key)) {
+          setPellets(prev => {
+            const newPellets = new Set(prev);
+            newPellets.delete(key);
+            return newPellets;
+          });
+          setScore(s => s + 10);
+        }
+
+        return { x: newX, y: newY };
+      });
+    }, 150);
+
+    return () => clearInterval(interval);
+  }, [direction, gameOver, gameWon, pellets]);
+
+  // Move ghosts
+  useEffect(() => {
+    if (gameOver || gameWon) return;
+
+    const interval = setInterval(() => {
+      setGhosts(prev => prev.map(ghost => {
+        const directions = ['UP', 'DOWN', 'LEFT', 'RIGHT'] as Direction[];
+        const randomDir = directions[Math.floor(Math.random() * directions.length)];
         
-        {/* Rotating slogans */}
-        <div className="mt-4 h-8 md:h-10 overflow-hidden flex items-center justify-center">
-          <span
-            className={`inline-block text-center text-[clamp(18px,3vw,32px)] font-light transition-all duration-[400ms] ease-in-out ${
-              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
-            }`}
-          >
-            {slogans[currentIndex]}
-          </span>
-        </div>
-      </main>
+        let newX = ghost.x;
+        let newY = ghost.y;
+
+        switch (randomDir) {
+          case 'UP':
+            newY = Math.max(0, ghost.y - 1);
+            break;
+          case 'DOWN':
+            newY = Math.min(GRID_SIZE - 1, ghost.y + 1);
+            break;
+          case 'LEFT':
+            newX = Math.max(0, ghost.x - 1);
+            break;
+          case 'RIGHT':
+            newX = Math.min(GRID_SIZE - 1, ghost.x + 1);
+            break;
+        }
+
+        return { ...ghost, x: newX, y: newY };
+      }));
+    }, 300);
+
+    return () => clearInterval(interval);
+  }, [gameOver, gameWon]);
+
+  // Check collisions
+  useEffect(() => {
+    const collision = ghosts.some(ghost => ghost.x === pacman.x && ghost.y === pacman.y);
+    if (collision) {
+      setGameOver(true);
+    }
+
+    if (pellets.size === 0 && !gameWon) {
+      setGameWon(true);
+    }
+  }, [pacman, ghosts, pellets, gameWon]);
+
+  const resetGame = () => {
+    setPacman(INITIAL_PACMAN);
+    setDirection('RIGHT');
+    setGhosts(INITIAL_GHOSTS);
+    setScore(0);
+    setGameOver(false);
+    setGameWon(false);
+    
+    const initialPellets = new Set<string>();
+    for (let x = 0; x < GRID_SIZE; x++) {
+      for (let y = 0; y < GRID_SIZE; y++) {
+        if (x !== INITIAL_PACMAN.x || y !== INITIAL_PACMAN.y) {
+          initialPellets.add(`${x},${y}`);
+        }
+      }
+    }
+    setPellets(initialPellets);
+  };
+
+  return (
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
+      <div className="mb-4 text-white text-2xl font-bold">
+        Score: {score}
+      </div>
       
-      {/* Start Prompting arrow pointing left - bottom left */}
-      <div className="absolute left-6 md:left-8 bottom-[5%] z-20 flex items-center gap-3 arrow-point-left">
-        <div className="flex items-center gap-2 text-white/80 font-medium text-sm md:text-base">
-          <svg 
-            className="w-5 h-5 md:w-6 md:h-6 animate-bounce-horizontal" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          <span>Start prompting</span>
-        </div>
+      <div 
+        className="relative bg-gray-900 border-4 border-blue-500"
+        style={{ 
+          width: GRID_SIZE * CELL_SIZE, 
+          height: GRID_SIZE * CELL_SIZE 
+        }}
+      >
+        {/* Pellets */}
+        {Array.from(pellets).map(key => {
+          const [x, y] = key.split(',').map(Number);
+          return (
+            <div
+              key={key}
+              className="absolute bg-yellow-300 rounded-full"
+              style={{
+                left: x * CELL_SIZE + CELL_SIZE / 2 - 2,
+                top: y * CELL_SIZE + CELL_SIZE / 2 - 2,
+                width: 4,
+                height: 4
+              }}
+            />
+          );
+        })}
+
+        {/* Pac-Man */}
+        <div
+          className="absolute bg-yellow-400 rounded-full transition-all duration-150"
+          style={{
+            left: pacman.x * CELL_SIZE,
+            top: pacman.y * CELL_SIZE,
+            width: CELL_SIZE - 2,
+            height: CELL_SIZE - 2
+          }}
+        />
+
+        {/* Ghosts */}
+        {ghosts.map((ghost, i) => (
+          <div
+            key={i}
+            className="absolute rounded-t-full transition-all duration-300"
+            style={{
+              left: ghost.x * CELL_SIZE,
+              top: ghost.y * CELL_SIZE,
+              width: CELL_SIZE - 2,
+              height: CELL_SIZE - 2,
+              backgroundColor: ghost.color
+            }}
+          />
+        ))}
+
+        {/* Game Over Overlay */}
+        {(gameOver || gameWon) && (
+          <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center">
+            <div className="text-white text-3xl font-bold mb-4">
+              {gameWon ? '🎉 YOU WIN! 🎉' : 'GAME OVER'}
+            </div>
+            <div className="text-white text-xl mb-4">
+              Final Score: {score}
+            </div>
+            <button
+              onClick={resetGame}
+              className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              Play Again
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-4 text-white text-center">
+        <div className="mb-2">Use Arrow Keys or WASD to move</div>
+        <div className="text-sm text-gray-400">Collect all pellets and avoid the ghosts!</div>
       </div>
     </div>
   );
 }
+
