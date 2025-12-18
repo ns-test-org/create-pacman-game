@@ -173,13 +173,13 @@ export default function PacmanGame() {
   };
 
   return (
-    <div className="min-h-screen bg-blue-500 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-purple-500 flex flex-col items-center justify-center p-4">
       <div className="mb-4 text-white text-2xl font-bold">
         Score: {score}
       </div>
       
       <div 
-        className="relative bg-gray-900 border-4 border-blue-500 shadow-2xl"
+        className="relative bg-gray-900 border-4 border-purple-500 shadow-2xl"
         style={{ 
           width: GRID_SIZE * CELL_SIZE, 
           height: GRID_SIZE * CELL_SIZE,
@@ -240,7 +240,7 @@ export default function PacmanGame() {
             </div>
             <button
               onClick={resetGame}
-              className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              className="px-6 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
             >
               Play Again
             </button>
@@ -255,6 +255,8 @@ export default function PacmanGame() {
     </div>
   );
 }
+
+
 
 
 
