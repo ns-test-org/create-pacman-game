@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 
 const GRID_SIZE = 20;
-const CELL_SIZE = 30;
+const CELL_SIZE = 27;
 const INITIAL_PACMAN = { x: 10, y: 10 };
 const INITIAL_GHOSTS = [
   { x: 5, y: 5, color: 'red' },
@@ -255,6 +255,7 @@ export default function PacmanGame() {
     </div>
   );
 }
+
 
 
 
