@@ -173,7 +173,7 @@ export default function PacmanGame() {
   };
 
   return (
-    <div className="min-h-screen bg-blue-500 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-purple-500 flex flex-col items-center justify-center p-4">
       <div className="mb-4 text-white text-2xl font-bold">
         Score: {score}
       </div>
@@ -255,6 +255,7 @@ export default function PacmanGame() {
     </div>
   );
 }
+
 
 
 
